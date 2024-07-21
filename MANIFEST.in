@@ -1,0 +1,4 @@
+
+include *.PNG
+include *.txt
+recursive-include TESTS *.py

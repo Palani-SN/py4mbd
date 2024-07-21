@@ -1,0 +1,18 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.4, pytest-6.2.5, py-1.11.0, pluggy-1.5.0
+rootdir: D:\GitRepos\py4mbd\TESTS
+plugins: anyio-4.4.0, reporter-0.5.2, reporter-html1-0.8.2
+collected 0 items
+
+============================== warnings summary ===============================
+..\..\..\Softwares\miniconda3\envs\py4mbd\Lib\site-packages\_pytest\assertion\rewrite.py:689
+  D:\Softwares\miniconda3\envs\py4mbd\Lib\site-packages\_pytest\assertion\rewrite.py:689: DeprecationWarning: ast.Str is deprecated and will be removed in Python 3.14; use ast.Constant instead
+    and isinstance(item.value, ast.Str)
+
+..\..\..\Softwares\miniconda3\envs\py4mbd\Lib\site-packages\_pytest\assertion\rewrite.py:691
+  D:\Softwares\miniconda3\envs\py4mbd\Lib\site-packages\_pytest\assertion\rewrite.py:691: DeprecationWarning: Attribute s is deprecated and will be removed in Python 3.14; use value instead
+    doc = item.value.s
+
+-- Docs: https://docs.pytest.org/en/stable/warnings.html
+------ generated report: D:\GitRepos\py4mbd\REPORTS\TestCaseResults.html ------
+============================= 2 warnings in 0.68s =============================
