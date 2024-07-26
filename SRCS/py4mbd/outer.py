@@ -55,7 +55,7 @@ class node:
             # Actual Call to the Code
             result = root._docs(meta={
                 'inc': inc,
-                'path': prefix,
+                'key': prefix,
                 'func': func
             })
 

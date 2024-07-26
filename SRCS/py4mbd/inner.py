@@ -17,12 +17,12 @@ class pod:
         # xpath : ( xpath or ignore )
         # meta_mode = meta['mode'] if 'mode' in meta.keys() else 'DEV'
         meta_inc = meta['inc'] if 'inc' in meta.keys() else ['desc', 'params', 'docs', 'kwargs', 'ret']
-        meta_path = meta['path'] if 'path' in meta.keys() else self.__class__.__name__
+        meta_path = meta['key'] if 'key' in meta.keys() else self.__class__.__name__
 
         # inspect classes & functions
         # make recursive docs calls to fetch documentation of all functions in all sub objects
-        methods = {}
-        classes = {}
+        methods = []
+        classes = []
         for name, obj in inspect.getmembers(self):
             func_path = f"{meta_path}/{name}"
             if not meta['func'] or func_path == meta['func']:
@@ -71,26 +71,30 @@ class pod:
                     # Preparing payload
                     payload = {
                         'type': 'func',
-                        'path': func_path
+                        'key': func_path,
+                        'label': name
                         }
                     for key in meta_inc:
                         payload[key] = locals() [key]
                     # ===
-                    methods[name] = {**payload}
+                    methods.append(payload)
 
         mod_meta = deepcopy(meta)
         for name, obj in inspect.getmembers(self):
             if not meta['func']:
                 if not name.startswith('_') and isinstance(obj, pod):
                     # Preparing meta
-                    mod_meta.update({'path': f"{meta_path}/{name}"})
-                    classes[name] = getattr(self, name)._docs(meta=mod_meta)
+                    mod_meta.update({'key': f"{meta_path}/{name}"})
+                    classes.append(getattr(self, name)._docs(meta=mod_meta))
                 # ===
 
         class_meta = {}
         if not meta['func']:
-            class_meta = {'type': 'obj', 'path': meta['path']}
-        results = {**classes, **methods, **class_meta}
+            label = meta['key'].rsplit('/', 1)[-1]
+            class_meta = {'type': 'obj', 'key': meta['key'], 'label': label, 'children': methods+classes}
+        else:
+            class_meta = methods[0]
+        results = class_meta
         return results
 
     # Validate conf with code (DEV & REL) - return

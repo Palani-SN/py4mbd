@@ -2,6 +2,7 @@
 import time
 import uvicorn
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from py4mbd.outer import node
 
@@ -9,7 +10,19 @@ from code.layer1 import layer1
 
 Node = node(layer1)
 
+origins = [
+    "http://localhost",
+    "http://localhost:3000",
+]
+
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/index")
 async def root():
