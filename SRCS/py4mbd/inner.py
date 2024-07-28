@@ -16,7 +16,7 @@ class pod:
         # include : ( Any of [desc, params, docs, kwargs, ret] as <List> )
         # xpath : ( xpath or ignore )
         # meta_mode = meta['mode'] if 'mode' in meta.keys() else 'DEV'
-        meta_inc = meta['inc'] if 'inc' in meta.keys() else ['desc', 'params', 'docs', 'kwargs', 'ret', 'template']
+        meta_inc = meta['inc'] if 'inc' in meta.keys() else ['desc', 'params', 'docs', 'kwargs', 'ret', 'model']
         meta_path = meta['key'] if 'key' in meta.keys() else self.__class__.__name__
 
         # inspect classes & functions
@@ -64,12 +64,12 @@ class pod:
                     # ===
 
                     # Preparing Kwargs
-                    template = {name : {}}
+                    model = {name : {}}
                     for key, val in sign.parameters.items():
                         if val.default == inspect._empty:
-                            template[name][key] = val.default
+                            model[name][key] = val.default
                         else:
-                            template[name][key] = val.default
+                            model[name][key] = val.default
                     # ===
 
                     # Preparing return type
