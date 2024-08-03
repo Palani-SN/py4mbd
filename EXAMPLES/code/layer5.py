@@ -1,11 +1,11 @@
 
 from py4mbd.inner import pod
 
-from code.layer5 import layer5
+from code.layer6 import layer6
 
-class layer4(pod):
+class layer5(pod):
 
-    l5 = layer5()
+    l6 = layer6()
 
     # example single_int template function with single argument of type <int>
     def single_int(self, inp_int: int = 0) -> int:

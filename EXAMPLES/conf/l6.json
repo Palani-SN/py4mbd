@@ -1,0 +1,12 @@
+[
+    {
+        "single_int": {
+            "inp_int": 10
+        }
+    },
+    {
+        "single_float": {
+            "inp_float": 10.0
+        }
+    }
+]

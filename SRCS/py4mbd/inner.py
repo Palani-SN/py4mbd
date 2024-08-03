@@ -69,7 +69,7 @@ class pod:
                         if val.default == inspect._empty:
                             model[name][key] = val.default
                         else:
-                            model[name][key] = val.default
+                            model[name][key] = val.annotation(val.default)
                     # ===
 
                     # Preparing return type
@@ -167,7 +167,7 @@ class pod:
         # executes conf on code with telemetry
         meta_path = meta['path'] if 'path' in meta.keys() else self.__class__.__name__
 
-        def run_func(name:str, func: callable, params: dict):
+        def run_func(name:str, func: callable, params: dict, func_path: str):
 
             warnings = []
             ref = inspect.signature(func).parameters
@@ -184,8 +184,13 @@ class pod:
 
             if warnings == []:
                 try:
-                    return {'returned': func(*[], **params)}
+                    print(f"[ {func_path} ] X - - -")
+                    ret = func(*[], **params)
+                    print(f"[ {func_path} ] X - - -")
+                    return {'returned': ret}
                 except Exception as err:
+                    print(err)
+                    print(f"[ {func_path} ] X - - -")
                     return {'error': str(err)}
             else:
                 return {'warnings': warnings}
@@ -204,7 +209,7 @@ class pod:
                     func_path = f"{meta_path}/{name}" 
                     if not meta['func'] or func_path == meta['func']:
                         func = ref_methods[name]
-                        act_conf.append({'type': 'func', 'title': name, 'key': func_path, **run_func(name, func, params)})
+                        act_conf.append({'type': 'func', 'title': name, 'key': func_path, **run_func(name, func, params, func_path)})
                 # ===
 
                 # Preparing Classes
@@ -216,6 +221,98 @@ class pod:
 
         if not meta['func']:
             results = {'children': act_conf, 'type': 'obj', 'title': meta['path'].rsplit('/', 1)[-1], 'key': meta['path']}
+        else:
+            results = act_conf[0]
+        return results
+    
+    # Executes conf on code (DEV & REL) - 
+    def _flow(self, inps: Union[list[dict] | pathlib.Path], meta: dict = {}) -> dict:
+
+        # if meta.mode == 'DEV':
+        # executes conf on code without telemetry
+        # if meta.mode == 'REL':
+        # executes conf on code with telemetry
+        fpath = None
+        if isinstance(inps, pathlib.Path):
+            import json
+            from os.path import abspath, realpath, join
+            # fpath = abspath(realpath(join(_from, _to)))
+            if '_from' in meta.keys():
+                _from = meta['_from']
+                _to = inps
+            else:
+                _from = pathlib.Path.cwd()
+                _to = inps
+            fpath = pathlib.Path(realpath(join(_from, _to)))
+            if not fpath.exists():
+                raise FileNotFoundError(fpath.absolute())
+            # print(fpath)
+            with open(fpath.absolute()) as user_file:
+                model_list = json.loads(user_file.read())
+        else:
+            model_list = inps
+
+        meta_path = meta['path'] if 'path' in meta.keys() else self.__class__.__name__
+
+        def run_func(name:str, func: callable, params: dict, func_path: str):
+
+            warnings = []
+            ref = inspect.signature(func).parameters
+            expected = set(list(ref.keys()))
+            actual = set(list(params.keys()))
+            if not (actual == expected):
+                warnings.append(f"Expected {expected} kwargs, got {actual} kwargs instead")
+            else:
+                for key, val in ref.items():
+                    if not val.annotation in [str, int, float, list, dict, bool, inspect._empty]:
+                        warnings.append(f"Unsupported {key} : {val.annotation.__name__}, try using basic types (int, float, str, list, dict, bool) instead")
+                    if not((val.annotation == inspect._empty) or (type(params[key]) == val.annotation)):
+                        warnings.append(f"Expected {key} : {val.annotation.__name__}, got {key} : {type(params[key]).__name__} = {params[key]} instead")
+
+            if warnings == []:
+                try:
+                    # print(f"[ {func_path} ] X - - -")
+                    ret = func(*[], **params)
+                    # print(f"[ {func_path} ] X - - -")
+                    return {'returned': ret}
+                except Exception as err:
+                    # print(err)
+                    # print(f"[ {func_path} ] X - - -")
+                    return {'error': str(err)}
+            else:
+                return {'warnings': warnings}
+
+        ref_methods = { x : y for x, y in inspect.getmembers(self) if not x.startswith('_') and inspect.ismethod(y) } 
+        ref_classes = { x : y for x, y in inspect.getmembers(self) if not x.startswith('_') and isinstance(y, pod) }
+
+        act_conf = []
+        mod_meta = deepcopy(meta)
+        for i in range(len(model_list)):
+            # Preparing Elements
+            conf = model_list[i]
+            for name, params in conf.items():
+                # Preparing Functions
+                if name in ref_methods.keys():
+                    func_path = f"{meta_path}/{name}" 
+                    if not meta['func'] or func_path == meta['func']:
+                        func = ref_methods[name]
+                        act_conf.append({'type': 'func', 'title': name, 'key': func_path, **run_func(name, func, params, func_path)})
+                # ===
+
+                # Preparing Classes
+                if name in ref_classes.keys():
+                    class_path = f"{meta_path}/{name}"
+                    mod_meta.update({'path': class_path})
+                    if type(params) == str: 
+                        params = pathlib.Path(params)
+                        if fpath: mod_meta['_from'] = fpath.parent
+                    act_conf.append(getattr(self, name)._flow(inps=params, meta=mod_meta))
+                # ===
+
+        if not meta['func']:
+            results = {'children': act_conf, 'type': 'obj', 'title': meta['path'].rsplit('/', 1)[-1], 'key': meta['path']}
+            if fpath: 
+                results['file'] = str(fpath.absolute())
         else:
             results = act_conf[0]
         return results
