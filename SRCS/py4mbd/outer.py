@@ -3,6 +3,8 @@ import re
 # import json
 from py4mbd.inner import pod
 from datetime import datetime
+import pathlib
+from typing import Union
 
 # from functools import reduce  # forward compatibility for Python 3
 # import operator
@@ -148,3 +150,21 @@ class node:
         except (Exception) as err:
             result = {'error': str(err)}
         return {obj_path: result, 'time': datetime.now().isoformat()}
+    
+    # Executes conf on code (DEV & REL) - 
+    def _flow(self, inps: Union[list[dict] | str], root: str, workspace: str) -> dict:
+
+        import os
+        from os.path import abspath, realpath, join
+        os.makedirs(workspace, exist_ok=True)
+        folder = pathlib.Path(realpath(join(workspace, root)))
+        os.makedirs(folder, exist_ok=True)
+
+        obj = self.pods["layer1"]()
+        if type(inps) == str:
+            inps = pathlib.Path(inps)
+        ret = obj._flow(inps=inps, meta={
+            "func": None,
+            "path": root
+        })
+        return ret
